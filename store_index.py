@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import os
-from src.helper import (
+from helper import (
     load_pdf_files,
     filter_to_minimal_docs,
     text_split,

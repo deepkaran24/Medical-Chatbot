@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Assistant</title>
+    <title>Medical Chatbot</title>
+    
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,407 +15,54 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        :root { --primary: #667eea; --secondary: #764ba2; --bg-glass: rgba(255, 255, 255, 0.95); }
+        body, html { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--primary), var(--secondary)); overflow: hidden; }
+        
+        /* Animated BG */
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%), radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.2), transparent 50%); animation: bgShift 15s ease infinite; pointer-events: none; }
+        @keyframes bgShift { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } }
 
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
-        }
+        /* Layout */
+        .chat { height: 95vh; max-height: 900px; display: flex; flex-direction: column; justify-content: center; z-index: 1; }
+        .card { border-radius: 24px; background: var(--bg-glass); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+        
+        /* Header & Footer */
+        .card-header { background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.08); }
+        .card-footer { background: rgba(249,250,251,0.8); padding: 16px 20px; border-top: 1px solid rgba(0,0,0,0.08); }
+        
+        /* Chat Body */
+        .msg_card_body { flex: 1; overflow-y: auto; padding: 24px; background: linear-gradient(to bottom, rgba(249,250,251,0.5), rgba(255,255,255,0.3)); }
+        .msg_card_body::-webkit-scrollbar { width: 6px; }
+        .msg_card_body::-webkit-scrollbar-thumb { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 10px; }
 
-        /* Animated Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.2) 0%, transparent 50%);
-            animation: bgShift 15s ease infinite;
-            pointer-events: none;
-        }
+        /* Messages */
+        .msg_cotainer, .msg_cotainer_send { max-width: 75%; padding: 14px 18px; border-radius: 18px; position: relative; line-height: 1.6; box-shadow: 0 2px 12px rgba(0,0,0,0.08); animation: fadeIn 0.3s ease-out; }
+        .msg_cotainer { background: white; color: #2d3748; margin-left: 10px; border-radius: 18px 18px 18px 4px; }
+        .msg_cotainer_send { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; margin-right: 10px; border-radius: 18px 18px 4px 18px; float: right; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes bgShift {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-        }
+        /* Time & Markdown */
+        .msg_time, .msg_time_send { position: absolute; bottom: -22px; font-size: 11px; font-weight: 500; }
+        .msg_time { left: 10px; color: rgba(0,0,0,0.4); }
+        .msg_time_send { right: 10px; color: rgba(102,126,234,0.6); }
+        .msg_cotainer pre { background: #282c34; border-radius: 12px; padding: 12px; overflow-x: auto; color: #abb2bf; }
+        
+        /* Inputs */
+        .type_msg { border: 2px solid rgba(102,126,234,0.2); border-radius: 26px 0 0 26px; height: 52px; padding: 14px 20px; resize: none; }
+        .type_msg:focus { box-shadow: none; outline: none; border-color: var(--primary); }
+        .send_btn { border-radius: 0 26px 26px 0; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; width: 56px; cursor: pointer; transition: transform 0.2s; }
+        .send_btn:hover { transform: translateY(-2px); color: white; }
 
-        .chat {
-            margin-top: auto;
-            margin-bottom: auto;
-            height: 95vh;
-            max-height: 900px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .card {
-            height: 100%;
-            border-radius: 24px !important;
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
-        }
-
-        .card-header {
-            border-radius: 24px 24px 0 0 !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%) !important;
-            padding: 20px 24px;
-            backdrop-filter: blur(10px);
-        }
-
-        .card-footer {
-            border-radius: 0 0 24px 24px !important;
-            border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-            background: rgba(249, 250, 251, 0.8) !important;
-            backdrop-filter: blur(10px);
-            padding: 16px 20px;
-        }
-
-        .msg_card_body {
-            overflow-y: auto;
-            padding: 24px;
-            background: linear-gradient(to bottom, rgba(249, 250, 251, 0.5) 0%, rgba(255, 255, 255, 0.3) 100%);
-        }
-
-        .msg_card_body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .msg_card_body::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.03);
-            border-radius: 10px;
-        }
-
-        .msg_card_body::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .msg_card_body::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #764ba2, #667eea);
-        }
-
-        /* Chat Bubbles with entrance animation */
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .msg_cotainer {
-            margin-top: auto;
-            margin-bottom: auto;
-            margin-left: 10px;
-            border-radius: 18px 18px 18px 4px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-            color: #2d3748;
-            padding: 14px 18px;
-            position: relative;
-            max-width: 75%;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            animation: slideInLeft 0.3s ease-out;
-            line-height: 1.6;
-        }
-
-        .msg_cotainer_send {
-            margin-top: auto;
-            margin-bottom: auto;
-            margin-right: 10px;
-            border-radius: 18px 18px 4px 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 14px 18px;
-            position: relative;
-            max-width: 75%;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            animation: slideInRight 0.3s ease-out;
-            line-height: 1.6;
-        }
-
-        .msg_time, .msg_time_send {
-            position: absolute;
-            bottom: -22px;
-            font-size: 11px;
-            white-space: nowrap;
-            font-weight: 500;
-        }
-
-        .msg_time {
-            left: 10px;
-            color: rgba(0, 0, 0, 0.4);
-        }
-
-        .msg_time_send {
-            right: 10px;
-            color: rgba(102, 126, 234, 0.6);
-        }
-
-        /* Avatar Improvements */
-        .img_cont {
-            position: relative;
-            height: 64px;
-            width: 64px;
-        }
-
-        .user_img {
-            height: 64px;
-            width: 64px;
-            border: 3px solid rgba(102, 126, 234, 0.3);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .user_img:hover {
-            transform: scale(1.05);
-            border-color: rgba(102, 126, 234, 0.6);
-        }
-
-        .img_cont_msg {
-            height: 36px;
-            width: 36px;
-            flex-shrink: 0;
-        }
-
-        .user_img_msg {
-            height: 36px;
-            width: 36px;
-            border: 2px solid rgba(102, 126, 234, 0.2);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .online_icon {
-            position: absolute;
-            height: 14px;
-            width: 14px;
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            border-radius: 50%;
-            bottom: 2px;
-            right: 2px;
-            border: 3px solid white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-
-        .user_info span {
-            font-size: 18px;
-            color: #2d3748;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-        }
-
-        .user_info p {
-            font-size: 13px;
-            color: #48bb78;
-            margin-bottom: 0;
-            font-weight: 500;
-        }
-
-        /* Input Area */
-        .type_msg {
-            background-color: white !important;
-            border: 2px solid rgba(102, 126, 234, 0.2) !important;
-            color: #2d3748 !important;
-            height: 52px !important;
-            min-height: 52px;
-            max-height: 150px;
-            border-radius: 26px 0 0 26px !important;
-            padding: 14px 20px;
-            resize: none;
-            overflow-y: hidden;
-            font-size: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .type_msg::placeholder {
-            color: rgba(0, 0, 0, 0.4);
-        }
-
-        .type_msg:focus {
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
-            outline: 0px !important;
-            border-color: rgba(102, 126, 234, 0.5) !important;
-        }
-
-        .send_btn {
-            border-radius: 0 26px 26px 0 !important;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            border: 2px solid rgba(102, 126, 234, 0.2) !important;
-            border-left: 0 !important;
-            color: white !important;
-            cursor: pointer;
-            width: 56px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .send_btn:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .send_btn:active {
-            transform: translateY(0);
-        }
-
-        .send_btn i {
-            font-size: 16px;
-        }
-
-        /* Markdown Styling */
-        .msg_cotainer pre {
-            background: #282c34;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 12px;
-            margin-bottom: 8px;
-            overflow-x: auto;
-            color: #abb2bf;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .msg_cotainer code {
-            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-            font-size: 0.9em;
-        }
-
-        .msg_cotainer p {
-            margin-bottom: 8px;
-        }
-
-        .msg_cotainer p:last-child {
-            margin-bottom: 0;
-        }
-
-        .msg_cotainer ul,
-        .msg_cotainer ol {
-            margin: 8px 0;
-            padding-left: 24px;
-        }
-
-        .msg_cotainer li {
-            margin: 4px 0;
-        }
-
-        .msg_cotainer strong {
-            font-weight: 600;
-            color: #1a202c;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            display: inline-block;
-            padding: 14px 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-            border-radius: 18px 18px 18px 4px;
-            margin-left: 10px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out;
-            margin-right: 4px;
-        }
-
-        .typing-indicator span:nth-child(1) {
-            animation-delay: 0s;
-        }
-
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-                opacity: 0.7;
-            }
-            30% {
-                transform: translateY(-10px);
-                opacity: 1;
-            }
-        }
-
-        /* Message container spacing */
-        .d-flex.mb-4 {
-            margin-bottom: 28px !important;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .chat {
-                height: 100vh;
-                max-height: 100vh;
-            }
-
-            .card {
-                border-radius: 0 !important;
-            }
-
-            .card-header {
-                border-radius: 0 !important;
-            }
-
-            .card-footer {
-                border-radius: 0 !important;
-            }
-
-            .msg_cotainer,
-            .msg_cotainer_send {
-                max-width: 85%;
-            }
-        }
+        /* Loading */
+        .typing-indicator span { display: inline-block; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: typing 1.4s infinite ease-in-out; margin-right: 4px; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.7; } 50% { transform: translateY(-10px); opacity: 1; } }
+        
+        /* Avatars */
+        .user_img { height: 64px; width: 64px; border: 3px solid rgba(102,126,234,0.3); border-radius: 50%; }
+        .user_img_msg { height: 36px; width: 36px; border-radius: 50%; }
+        .online_icon { position: absolute; height: 14px; width: 14px; background: #48bb78; border-radius: 50%; bottom: 2px; right: 2px; border: 3px solid white; }
     </style>
 </head>
 <body>
@@ -423,19 +71,21 @@
     <div class="row justify-content-center h-100">
         <div class="col-md-10 col-lg-8 col-xl-6 chat">
             <div class="card">
-                <div class="card-header msg_head">
-                    <div class="d-flex bd-highlight align-items-center">
-                        <div class="img_cont">
-                            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="rounded-circle user_img">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <div class="img_cont position-relative">
+                            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="user_img">
                             <span class="online_icon"></span>
                         </div>
                         <div class="user_info ml-3">
-                            <span>Medical Assistant</span>
-                            <p>Online</p>
+                            <span style="font-weight: 600; font-size: 18px;">Medical Assistant</span>
+                            <p style="color: #48bb78; font-size: 13px; margin: 0;">Online</p>
                         </div>
                     </div>
                 </div>
+                
                 <div id="messageFormeight" class="card-body msg_card_body"></div>
+                
                 <div class="card-footer">
                     <form id="messageArea" class="input-group">
                         <textarea id="text" name="msg" placeholder="Type your message..." class="form-control type_msg" required></textarea>
@@ -451,17 +101,16 @@
 
 <script>
     $(document).ready(function() {
+        const date = new Date();
+        const str_time = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
+
         // Auto-Resize Textarea
-        const tx = document.getElementsByTagName("textarea");
-        for (let i = 0; i < tx.length; i++) {
-            tx[i].addEventListener("input", OnInput, false);
-        }
-        function OnInput() {
+        $("#text").on("input", function() {
             this.style.height = "auto";
             this.style.height = (this.scrollHeight) + "px";
-        }
+        });
 
-        // Handle Enter key
+        // Submit on Enter
         $("#text").on("keydown", function(e) {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -471,40 +120,71 @@
 
         $("#messageArea").on("submit", function(event) {
             event.preventDefault();
-            const date = new Date();
-            const str_time = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
-            var rawText = $("#text").val();
-            if($.trim(rawText) == '') return false;
+            const rawText = $("#text").val().trim();
+            if(!rawText) return;
 
-            var userHtml = '<div class="d-flex justify-content-end mb-4"><div class="msg_cotainer_send">' + rawText + '<span class="msg_time_send">'+ str_time + '</span></div><div class="img_cont_msg"><img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg"></div></div>';
+            // Render User Message
+            const userHtml = `
+                <div class="d-flex justify-content-end mb-4">
+                    <div class="msg_cotainer_send">
+                        ${rawText}
+                        <span class="msg_time_send">${str_time}</span>
+                    </div>
+                    <div class="img_cont_msg ml-2">
+                        <img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="user_img_msg">
+                    </div>
+                </div>`;
             
-            $("#text").val("");
-            $("#text").css("height", "52px"); 
+            $("#text").val("").css("height", "52px");
             $("#messageFormeight").append(userHtml);
             scrollToBottom();
 
-            var loadingHtml = '<div id="loading" class="d-flex justify-content-start mb-4"><div class="img_cont_msg"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="rounded-circle user_img_msg"></div><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+            // Show Loading Indicator
+            const loadingHtml = `
+                <div id="loading" class="d-flex justify-content-start mb-4">
+                    <div class="img_cont_msg mr-2">
+                        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="user_img_msg">
+                    </div>
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                </div>`;
             $("#messageFormeight").append(loadingHtml);
             scrollToBottom();
 
+            // Send to FastAPI
             $.ajax({
                 data: { msg: rawText },
                 type: "POST",
                 url: "/get",
             }).done(function(data) {
                 $("#loading").remove();
-                var formattedData = marked.parse(data);
-                var botHtml = '<div class="d-flex justify-content-start mb-4"><div class="img_cont_msg"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="rounded-circle user_img_msg"></div><div class="msg_cotainer">' + formattedData + '<span class="msg_time">' + str_time + '</span></div></div>';
-                var $message = $(botHtml);
+                
+                // Parse Markdown response
+                // Note: If FastAPI returns a JSON string like "answer", we treat it as text.
+                const formattedData = marked.parse(typeof data === 'string' ? data : JSON.stringify(data));
+                
+                const botHtml = `
+                    <div class="d-flex justify-content-start mb-4">
+                        <div class="img_cont_msg mr-2">
+                            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="user_img_msg">
+                        </div>
+                        <div class="msg_cotainer">
+                            ${formattedData}
+                            <span class="msg_time">${str_time}</span>
+                        </div>
+                    </div>`;
+                
+                const $message = $(botHtml);
                 $("#messageFormeight").append($message);
-                $message.find('pre code').each(function(i, block) { hljs.highlightElement(block); });
+                
+                // Highlight Code Blocks
+                $message.find('pre code').each((i, block) => hljs.highlightElement(block));
                 scrollToBottom();
             });
         });
 
         function scrollToBottom() {
-            var messageBody = document.getElementById("messageFormeight");
-            messageBody.scrollTop = messageBody.scrollHeight;
+            const msgBody = document.getElementById("messageFormeight");
+            msgBody.scrollTop = msgBody.scrollHeight;
         }
     });
 </script>
