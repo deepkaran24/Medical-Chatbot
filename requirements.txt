@@ -1,5 +1,7 @@
 langchain
-flask
+fastapi
+uvicorn
+jinja2
 sentence-transformers
 pypdf
 python-dotenv
