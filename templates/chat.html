@@ -3,190 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Chatbot</title>
-    
+    <title>AI Analyst Chat</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
-    
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-
-    <style>
-        :root { --primary: #667eea; --secondary: #764ba2; --bg-glass: rgba(255, 255, 255, 0.95); }
-        body, html { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--primary), var(--secondary)); overflow: hidden; }
-        
-        /* Animated BG */
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%), radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.2), transparent 50%); animation: bgShift 15s ease infinite; pointer-events: none; }
-        @keyframes bgShift { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } }
-
-        /* Layout */
-        .chat { height: 95vh; max-height: 900px; display: flex; flex-direction: column; justify-content: center; z-index: 1; }
-        .card { border-radius: 24px; background: var(--bg-glass); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; height: 100%; }
-        
-        /* Header & Footer */
-        .card-header { background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.08); }
-        .card-footer { background: rgba(249,250,251,0.8); padding: 16px 20px; border-top: 1px solid rgba(0,0,0,0.08); }
-        
-        /* Chat Body */
-        .msg_card_body { flex: 1; overflow-y: auto; padding: 24px; background: linear-gradient(to bottom, rgba(249,250,251,0.5), rgba(255,255,255,0.3)); }
-        .msg_card_body::-webkit-scrollbar { width: 6px; }
-        .msg_card_body::-webkit-scrollbar-thumb { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 10px; }
-
-        /* Messages */
-        .msg_cotainer, .msg_cotainer_send { max-width: 75%; padding: 14px 18px; border-radius: 18px; position: relative; line-height: 1.6; box-shadow: 0 2px 12px rgba(0,0,0,0.08); animation: fadeIn 0.3s ease-out; }
-        .msg_cotainer { background: white; color: #2d3748; margin-left: 10px; border-radius: 18px 18px 18px 4px; }
-        .msg_cotainer_send { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; margin-right: 10px; border-radius: 18px 18px 4px 18px; float: right; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Time & Markdown */
-        .msg_time, .msg_time_send { position: absolute; bottom: -22px; font-size: 11px; font-weight: 500; }
-        .msg_time { left: 10px; color: rgba(0,0,0,0.4); }
-        .msg_time_send { right: 10px; color: rgba(102,126,234,0.6); }
-        .msg_cotainer pre { background: #282c34; border-radius: 12px; padding: 12px; overflow-x: auto; color: #abb2bf; }
-        
-        /* Inputs */
-        .type_msg { border: 2px solid rgba(102,126,234,0.2); border-radius: 26px 0 0 26px; height: 52px; padding: 14px 20px; resize: none; }
-        .type_msg:focus { box-shadow: none; outline: none; border-color: var(--primary); }
-        .send_btn { border-radius: 0 26px 26px 0; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; width: 56px; cursor: pointer; transition: transform 0.2s; }
-        .send_btn:hover { transform: translateY(-2px); color: white; }
-
-        /* Loading */
-        .typing-indicator span { display: inline-block; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: typing 1.4s infinite ease-in-out; margin-right: 4px; }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing { 0%, 100% { transform: translateY(0); opacity: 0.7; } 50% { transform: translateY(-10px); opacity: 1; } }
-        
-        /* Avatars */
-        .user_img { height: 64px; width: 64px; border: 3px solid rgba(102,126,234,0.3); border-radius: 50%; }
-        .user_img_msg { height: 36px; width: 36px; border-radius: 50%; }
-        .online_icon { position: absolute; height: 14px; width: 14px; background: #48bb78; border-radius: 50%; bottom: 2px; right: 2px; border: 3px solid white; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="container-fluid h-100">
-    <div class="row justify-content-center h-100">
-        <div class="col-md-10 col-lg-8 col-xl-6 chat">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <div class="img_cont position-relative">
-                            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="user_img">
-                            <span class="online_icon"></span>
-                        </div>
-                        <div class="user_info ml-3">
-                            <span style="font-weight: 600; font-size: 18px;">Medical Assistant</span>
-                            <p style="color: #48bb78; font-size: 13px; margin: 0;">Online</p>
-                        </div>
+    <div class="container-fluid h-100">
+        <div class="row justify-content-center h-100">
+            <div class="col-md-10 col-lg-8 col-xl-6 chat">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="img_cont"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="user_img"><span class="online_icon"></span></div>
+                        <div class="user_info ml-3"><span>Nifty 50 AI</span><p>Online</p></div>
                     </div>
-                </div>
-                
-                <div id="messageFormeight" class="card-body msg_card_body"></div>
-                
-                <div class="card-footer">
-                    <form id="messageArea" class="input-group">
-                        <textarea id="text" name="msg" placeholder="Type your message..." class="form-control type_msg" required></textarea>
-                        <div class="input-group-append">
-                            <button type="submit" id="send" class="input-group-text send_btn"><i class="fas fa-paper-plane"></i></button>
-                        </div>
-                    </form>
+                    <div id="messageFormeight" class="card-body msg_card_body"></div>
+                    <div class="card-footer">
+                        <form id="messageArea" class="input-group">
+                            <textarea id="text" name="msg" placeholder="Ask about Nifty 50..." class="form-control type_msg" required></textarea>
+                            <div class="input-group-append">
+                                <button type="submit" class="input-group-text send_btn"><i class="fas fa-paper-plane"></i></button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<script>
-    $(document).ready(function() {
-        const date = new Date();
-        const str_time = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
-
-        // Auto-Resize Textarea
-        $("#text").on("input", function() {
-            this.style.height = "auto";
-            this.style.height = (this.scrollHeight) + "px";
-        });
-
-        // Submit on Enter
-        $("#text").on("keydown", function(e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                $("#messageArea").submit();
-            }
-        });
-
-        $("#messageArea").on("submit", function(event) {
-            event.preventDefault();
-            const rawText = $("#text").val().trim();
-            if(!rawText) return;
-
-            // Render User Message
-            const userHtml = `
-                <div class="d-flex justify-content-end mb-4">
-                    <div class="msg_cotainer_send">
-                        ${rawText}
-                        <span class="msg_time_send">${str_time}</span>
-                    </div>
-                    <div class="img_cont_msg ml-2">
-                        <img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="user_img_msg">
-                    </div>
-                </div>`;
-            
-            $("#text").val("").css("height", "52px");
-            $("#messageFormeight").append(userHtml);
-            scrollToBottom();
-
-            // Show Loading Indicator
-            const loadingHtml = `
-                <div id="loading" class="d-flex justify-content-start mb-4">
-                    <div class="img_cont_msg mr-2">
-                        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="user_img_msg">
-                    </div>
-                    <div class="typing-indicator"><span></span><span></span><span></span></div>
-                </div>`;
-            $("#messageFormeight").append(loadingHtml);
-            scrollToBottom();
-
-            // Send to FastAPI
-            $.ajax({
-                data: { msg: rawText },
-                type: "POST",
-                url: "/get",
-            }).done(function(data) {
-                $("#loading").remove();
-                
-                // Parse Markdown response
-                // Note: If FastAPI returns a JSON string like "answer", we treat it as text.
-                const formattedData = marked.parse(typeof data === 'string' ? data : JSON.stringify(data));
-                
-                const botHtml = `
-                    <div class="d-flex justify-content-start mb-4">
-                        <div class="img_cont_msg mr-2">
-                            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="user_img_msg">
-                        </div>
-                        <div class="msg_cotainer">
-                            ${formattedData}
-                            <span class="msg_time">${str_time}</span>
-                        </div>
-                    </div>`;
-                
-                const $message = $(botHtml);
-                $("#messageFormeight").append($message);
-                
-                // Highlight Code Blocks
-                $message.find('pre code').each((i, block) => hljs.highlightElement(block));
-                scrollToBottom();
-            });
-        });
-
-        function scrollToBottom() {
-            const msgBody = document.getElementById("messageFormeight");
-            msgBody.scrollTop = msgBody.scrollHeight;
-        }
-    });
-</script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
